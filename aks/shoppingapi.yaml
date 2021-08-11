@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shoppingapi-deployment
+  labels:
+    app: shoppingapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shoppingapi
+  template:
+    metadata:
+      labels:
+        app: shoppingapi
+    spec:
+      containers:
+        - name: shoppingapi
+          image: shoppingacr99111.azurecr.io/shoppingapi:V1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: DatabaseSettings__ConnectionString
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: database_url
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-password
+      imagePullSecrets:
+        - name: acr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shoppingapi-service
+spec:
+  selector:
+    app: shoppingapi
+  ports:
+    - protocol: TCP
+      port: 80
+      # use portforwaring only during development and type is NodePort
+      #port: 8000
+      #targetPort: 80
+      #nodePort: 30001

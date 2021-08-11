@@ -13,7 +13,12 @@ namespace Shopping.API.Data
         public ProductContext(IConfiguration configuration)
         {
             var client = new MongoClient(configuration["DatabaseSettings:ConnectionString"]);
+
             var database = client.GetDatabase(configuration["DatabaseSettings:DatabaseName"]);
+
+
+
+
 
             Products = database.GetCollection<Product>(configuration["DatabaseSettings:CollectionName"]);
             SeedData(Products);

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shoppingapi-deployment
+  labels:
+    app: shoppingapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shoppingapi
+  template:
+    metadata:
+      labels:
+        app: shoppingapi
+    spec:
+      containers:
+        - name: shoppingapi
+          image: aramyako/shoppingapi:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: 128Mi
+              cpu: "500m"
+          requests:
+            memory: 64Mi
+            cpu: "250m"
+          ports:
+            - containerPort: 80
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Development
+            - name: DatabaseSettings__ConnectionString
+              valueFrom:
+                configMapKeyRef:
+                  name: mongo-config
+                  key: database_url
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-username
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: mongo-root-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shoppingapi-service
+spec:
+  type: NodePort
+  selector:
+    app: shoppingapi
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 80
+      nodePort: 31001
